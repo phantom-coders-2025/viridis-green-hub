@@ -1,18 +1,55 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  Trash2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  uploadedAt: string;
+}
 
 const DataImport = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploaded, setUploaded] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
+
+  // ✅ Load uploaded files from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("uploadedFiles");
+    if (saved) {
+      try {
+        setUploadedFiles(JSON.parse(saved));
+      } catch {
+        console.error("Error parsing saved uploadedFiles");
+      }
+    }
+  }, []);
+
+  // ✅ Save uploaded files to localStorage
+  useEffect(() => {
+    localStorage.setItem("uploadedFiles", JSON.stringify(uploadedFiles));
+  }, [uploadedFiles]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+      const validTypes = [
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ];
       if (validTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
         toast({
@@ -31,24 +68,49 @@ const DataImport = () => {
 
   const handleUpload = () => {
     if (file) {
-      // Simulate upload
       setTimeout(() => {
+        const newFile: UploadedFile = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file),
+          uploadedAt: new Date().toLocaleString(),
+        };
+
+        setUploadedFiles((prev) => [...prev, newFile]);
         setUploaded(true);
         toast({
           title: "Upload Complete ✅",
-          description: "Your data has been successfully imported",
+          description: "Your data has been successfully imported and saved locally",
         });
       }, 1500);
     }
   };
 
+  const handleViewFile = (file: UploadedFile) => {
+    window.open(file.url, "_blank");
+  };
+
+  const handleDeleteFile = (fileName: string) => {
+    const updated = uploadedFiles.filter((f) => f.name !== fileName);
+    setUploadedFiles(updated);
+    toast({
+      title: "File Removed",
+      description: `${fileName} has been deleted from history`,
+      variant: "destructive",
+    });
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Data Import</h1>
-        <p className="text-muted-foreground">Upload your hospital's sustainability data</p>
+        <p className="text-muted-foreground">
+          Upload and manage your hospital's sustainability data
+        </p>
       </div>
 
+      {/* Upload Section */}
       {!uploaded ? (
         <Card className="bg-gradient-card border-border/50">
           <CardHeader>
@@ -114,26 +176,28 @@ const DataImport = () => {
             <div className="text-center space-y-6">
               <CheckCircle2 className="w-24 h-24 text-success-foreground mx-auto" />
               <div>
-                <h3 className="text-2xl font-bold text-success-foreground">Upload Complete!</h3>
+                <h3 className="text-2xl font-bold text-success-foreground">
+                  Upload Complete!
+                </h3>
                 <p className="text-success-foreground/80 mt-2">
-                  Your data has been successfully imported and validated
+                  Your data has been successfully imported and stored locally
                 </p>
               </div>
 
               <div className="flex gap-4 justify-center">
-                <Button 
-                  onClick={() => window.location.href = '/'}
+                <Button
+                  onClick={() => (window.location.href = "/dashboard")}
                   className="bg-success-foreground/90 text-success hover:bg-success-foreground"
                 >
                   View Dashboard
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setFile(null);
                     setUploaded(false);
                   }}
-                  className="border-success-foreground/30 text-success-foreground hover:bg-success-foreground/10"
+                  className="bg-success-foreground/90 text-success hover:bg-success-foreground"
                 >
                   Upload Another File
                 </Button>
@@ -143,35 +207,58 @@ const DataImport = () => {
         </Card>
       )}
 
-      {/* Validation Messages Card */}
-      <Card className="bg-gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-primary" />
-            Data Validation Tips
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-success mt-0.5">✓</span>
-              <span>Ensure all numeric values are positive numbers</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-success mt-0.5">✓</span>
-              <span>Department names should match existing records</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-success mt-0.5">✓</span>
-              <span>Date format: YYYY-MM-DD</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-success mt-0.5">✓</span>
-              <span>Remove any empty rows before uploading</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+      {/* File History Section */}
+      {uploadedFiles.length > 0 && (
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Previously Uploaded Files</CardTitle>
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {uploadedFiles.map((f, index) => (
+              <div
+                key={index}
+                className="relative bg-muted/40 rounded-xl border border-border/40 p-5 hover:shadow-lg hover:border-primary/50 transition-all"
+              >
+                {/* Delete Button inside the card */}
+                <button
+                  onClick={() => handleDeleteFile(f.name)}
+                  className="absolute top-2 right-2 text-destructive hover:text-destructive/80 transition-colors"
+                  title="Delete File"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+
+                <div
+                  className="flex flex-col items-center gap-3 text-center cursor-pointer"
+                  onClick={() => handleViewFile(f)}
+                >
+                  <FileSpreadsheet className="w-10 h-10 text-primary" />
+                  <div className="space-y-1">
+                    <p className="font-medium text-foreground truncate w-48 mx-auto">
+                      {f.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(f.size / 1024).toFixed(1)} KB
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(f.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 border-primary/40 text-primary hover:bg-primary/10"
+                  >
+                    <Eye className="w-4 h-4 mr-1" /> View File
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

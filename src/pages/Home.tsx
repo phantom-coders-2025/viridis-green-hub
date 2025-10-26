@@ -52,13 +52,7 @@ export const Home = () => {
             Get Started
           </Button>
 
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-white text-white hover:bg-white/10 backdrop-blur-sm px-8 py-3 transition-all"
-          >
-            Learn More
-          </Button>
+          
         </div>
       </div>
 
