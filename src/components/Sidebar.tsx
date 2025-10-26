@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/calculator", label: "Carbon Calculator", icon: Calculator },
   { path: "/score", label: "Sustainability Score", icon: Award },
   { path: "/import", label: "Data Import", icon: Upload },

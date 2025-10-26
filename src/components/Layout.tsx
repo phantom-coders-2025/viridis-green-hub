@@ -1,21 +1,19 @@
-import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { Outlet } from "react-router-dom";
 
-interface LayoutProps {
-  children: ReactNode;
-}
-
-export const Layout = ({ children }: LayoutProps) => {
+const Layout = () => {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col w-full">
         <TopBar />
         <main className="flex-1 p-6 overflow-auto">
-          {children}
+          <Outlet /> {/* Nested routes render here */}
         </main>
       </div>
     </div>
   );
 };
+
+export default Layout;
