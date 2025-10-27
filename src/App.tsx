@@ -19,6 +19,7 @@ import PeerComparison from "./pages/PeerComparison";
 import ComplianceReports from "./pages/ComplianceReports";
 import Gamification from "./pages/Gamification";
 import NotFound from "./pages/NotFound";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/comparison" element={<PeerComparison />} />
             <Route path="/compliance" element={<ComplianceReports />} />
             <Route path="/gamification" element={<Gamification />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           {/* ---------- 404 PAGE ---------- */}
